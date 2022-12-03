@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"unicode"
 )
 
@@ -58,18 +59,15 @@ func (problem *Problem) SolvePart1() error {
 	for _, rucksack := range problem.Rucksacks {
 		half := len(rucksack) / 2
 
-	outer:
-		for _, x := range rucksack[:half] {
-			for _, y := range rucksack[half:] {
-				if x == y {
-					if unicode.IsLower(x) {
-						priorities += int64(x) - int64('a') + 1
-					} else if unicode.IsUpper(x) {
-						priorities += 26 + int64(x) - int64('A') + 1
-					}
-
-					break outer
+		for _, item := range rucksack[:half] {
+			if strings.ContainsRune(rucksack[half:], item) {
+				if unicode.IsLower(item) {
+					priorities += int64(item) - int64('a') + 1
+				} else if unicode.IsUpper(item) {
+					priorities += 26 + int64(item) - int64('A') + 1
 				}
+
+				break
 			}
 		}
 	}
@@ -81,20 +79,18 @@ func (problem *Problem) SolvePart1() error {
 func (problem *Problem) SolvePart2() error {
 	var priorities int64 = 0
 	for i := 0; i < len(problem.Rucksacks); i += 3 {
-	outer:
-		for _, x := range problem.Rucksacks[i] {
-			for _, y := range problem.Rucksacks[i+1] {
-				for _, z := range problem.Rucksacks[i+2] {
-					if (x == y) && (y == z) {
-						if unicode.IsLower(x) {
-							priorities += int64(x) - int64('a') + 1
-						} else if unicode.IsUpper(x) {
-							priorities += 26 + int64(x) - int64('A') + 1
-						}
+		for _, item := range problem.Rucksacks[i] {
+			a := strings.ContainsRune(problem.Rucksacks[i+1], item)
+			b := strings.ContainsRune(problem.Rucksacks[i+2], item)
 
-						break outer
-					}
+			if a && b {
+				if unicode.IsLower(item) {
+					priorities += int64(item) - int64('a') + 1
+				} else if unicode.IsUpper(item) {
+					priorities += 26 + int64(item) - int64('A') + 1
 				}
+
+				break
 			}
 		}
 	}
