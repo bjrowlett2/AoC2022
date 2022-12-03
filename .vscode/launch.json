@@ -18,6 +18,13 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/day_02/main.go",
             "cwd": "${workspaceFolder}/run_tree"
+        }, {
+            "name": "Day 03",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/day_03/main.go",
+            "cwd": "${workspaceFolder}/run_tree"
         }
     ]
 }
