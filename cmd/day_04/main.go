@@ -80,29 +80,20 @@ func Load() (*Problem, error) {
 	return &problem, nil
 }
 
-func Between(x int64, min int64, max int64) bool {
-	return (min <= x) && (x <= max)
+func Contained(a *Section, b *Section) bool {
+	aContained := (b.Min <= a.Min) && (a.Max <= b.Max)
+	bContained := (a.Min <= b.Min) && (b.Max <= a.Max)
+	return aContained || bContained
 }
 
-func Contained(inner *Section, outer *Section) bool {
-	minBetween := Between(inner.Min, outer.Min, outer.Max)
-	maxBetween := Between(inner.Max, outer.Min, outer.Max)
-	return minBetween && maxBetween
-}
-
-func Overlapped(first *Section, second *Section) bool {
-	minBetween := Between(first.Min, second.Min, second.Max)
-	maxBetween := Between(first.Max, second.Min, second.Max)
-	return minBetween || maxBetween
+func Overlapped(a *Section, b *Section) bool {
+	return (a.Min <= b.Max) && (b.Min <= a.Max)
 }
 
 func (problem *Problem) SolvePart1() error {
 	var contained int64 = 0
 	for _, pair := range problem.Pairs {
-		aContained := Contained(&pair.A, &pair.B)
-		bContained := Contained(&pair.B, &pair.A)
-
-		if aContained || bContained {
+		if Contained(&pair.A, &pair.B) {
 			contained += 1
 		}
 	}
@@ -114,11 +105,7 @@ func (problem *Problem) SolvePart1() error {
 func (problem *Problem) SolvePart2() error {
 	var overlapped int64 = 0
 	for _, pair := range problem.Pairs {
-		aContained := Contained(&pair.A, &pair.B)
-		bContained := Contained(&pair.B, &pair.A)
-		abOverlapped := Overlapped(&pair.A, &pair.B)
-
-		if aContained || bContained || abOverlapped {
+		if Overlapped(&pair.A, &pair.B) {
 			overlapped += 1
 		}
 	}
