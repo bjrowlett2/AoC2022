@@ -33,9 +33,9 @@ func main() {
 }
 
 type Rearrangement struct {
-	To     int64
-	From   int64
-	Crates int64
+	To     int
+	From   int
+	Crates int
 }
 
 type Problem struct {
@@ -91,7 +91,7 @@ func Load() (*Problem, error) {
 				}
 			}
 		} else if strings.HasPrefix(line, "move") {
-			var to, from, crates int64
+			var to, from, crates int
 			if _, err = fmt.Sscanf(line, "move %d from %d to %d", &crates, &from, &to); err != nil {
 				return nil, err
 			}
@@ -112,7 +112,7 @@ func Load() (*Problem, error) {
 func (problem *Problem) SolvePart1() error {
 	for _, rearrangement := range problem.Procedure {
 		var r rune
-		for k := 0; k < int(rearrangement.Crates); k += 1 {
+		for k := 0; k < rearrangement.Crates; k += 1 {
 			problem.Stacks[rearrangement.From], r = aoc.Pop(problem.Stacks[rearrangement.From])
 			problem.Stacks[rearrangement.To] = aoc.Push(problem.Stacks[rearrangement.To], r)
 		}
@@ -131,12 +131,12 @@ func (problem *Problem) SolvePart2() error {
 	for _, rearrangement := range problem.Procedure {
 		var r rune
 		t := make(aoc.Stack[rune], 0)
-		for k := 0; k < int(rearrangement.Crates); k += 1 {
+		for k := 0; k < rearrangement.Crates; k += 1 {
 			problem.Stacks[rearrangement.From], r = aoc.Pop(problem.Stacks[rearrangement.From])
 			t = aoc.Push(t, r)
 		}
 
-		for k := 0; k < int(rearrangement.Crates); k += 1 {
+		for k := 0; k < rearrangement.Crates; k += 1 {
 			t, r = aoc.Pop(t)
 			problem.Stacks[rearrangement.To] = aoc.Push(problem.Stacks[rearrangement.To], r)
 		}
