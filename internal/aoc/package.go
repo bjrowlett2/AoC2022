@@ -13,3 +13,19 @@ func SortInt64Desc(slice []int64) {
 		return slice[j] < slice[i]
 	})
 }
+
+type Stack[T any] []T
+
+func Peek[T any](stack Stack[T]) T {
+	n := len(stack)
+	return stack[n-1]
+}
+
+func Pop[T any](stack Stack[T]) (Stack[T], T) {
+	n := len(stack)
+	return stack[:n-1], stack[n-1]
+}
+
+func Push[T any](stack Stack[T], item T) Stack[T] {
+	return append(stack, item)
+}
