@@ -148,6 +148,6 @@ func (problem *Problem) SolvePart2() error {
 		top += string(aoc.Peek(s))
 	}
 
-	fmt.Printf("Part 1: %s\n", top)
+	fmt.Printf("Part 2: %s\n", top)
 	return nil
 }
