@@ -32,15 +32,15 @@ func main() {
 	}
 }
 
-type Rearrangement struct {
-	To     int
-	From   int
-	Crates int
+type Step struct {
+	To    int
+	From  int
+	Count int
 }
 
 type Problem struct {
-	Stacks    []aoc.Stack[rune]
-	Procedure []Rearrangement
+	Steps  []Step
+	Stacks []aoc.Stack[rune]
 }
 
 func Load() (*Problem, error) {
@@ -55,8 +55,8 @@ func Load() (*Problem, error) {
 	defer file.Close()
 
 	problem := Problem{
-		Stacks:    nil, // Created below.
-		Procedure: make([]Rearrangement, 0),
+		Steps:  make([]Step, 0),
+		Stacks: nil, // Created below.
 	}
 
 	header := true
@@ -91,18 +91,18 @@ func Load() (*Problem, error) {
 				}
 			}
 		} else if strings.HasPrefix(line, "move") {
-			var to, from, crates int
-			if _, err = fmt.Sscanf(line, "move %d from %d to %d", &crates, &from, &to); err != nil {
+			var to, from, count int
+			if _, err = fmt.Sscanf(line, "move %d from %d to %d", &count, &from, &to); err != nil {
 				return nil, err
 			}
 
-			rearrangement := Rearrangement{
-				To:     to - 1,
-				From:   from - 1,
-				Crates: crates,
+			step := Step{
+				To:    to - 1,
+				From:  from - 1,
+				Count: count,
 			}
 
-			problem.Procedure = append(problem.Procedure, rearrangement)
+			problem.Steps = append(problem.Steps, step)
 		}
 	}
 
@@ -110,11 +110,11 @@ func Load() (*Problem, error) {
 }
 
 func (problem *Problem) SolvePart1() error {
-	for _, rearrangement := range problem.Procedure {
+	for _, step := range problem.Steps {
 		var r rune
-		for k := 0; k < rearrangement.Crates; k += 1 {
-			problem.Stacks[rearrangement.From], r = aoc.Pop(problem.Stacks[rearrangement.From])
-			problem.Stacks[rearrangement.To] = aoc.Push(problem.Stacks[rearrangement.To], r)
+		for k := 0; k < step.Count; k += 1 {
+			problem.Stacks[step.From], r = aoc.Pop(problem.Stacks[step.From])
+			problem.Stacks[step.To] = aoc.Push(problem.Stacks[step.To], r)
 		}
 	}
 
@@ -128,17 +128,17 @@ func (problem *Problem) SolvePart1() error {
 }
 
 func (problem *Problem) SolvePart2() error {
-	for _, rearrangement := range problem.Procedure {
+	for _, step := range problem.Steps {
 		var r rune
 		t := make(aoc.Stack[rune], 0)
-		for k := 0; k < rearrangement.Crates; k += 1 {
-			problem.Stacks[rearrangement.From], r = aoc.Pop(problem.Stacks[rearrangement.From])
+		for k := 0; k < step.Count; k += 1 {
+			problem.Stacks[step.From], r = aoc.Pop(problem.Stacks[step.From])
 			t = aoc.Push(t, r)
 		}
 
-		for k := 0; k < rearrangement.Crates; k += 1 {
+		for k := 0; k < step.Count; k += 1 {
 			t, r = aoc.Pop(t)
-			problem.Stacks[rearrangement.To] = aoc.Push(problem.Stacks[rearrangement.To], r)
+			problem.Stacks[step.To] = aoc.Push(problem.Stacks[step.To], r)
 		}
 
 	}
