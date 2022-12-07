@@ -40,7 +40,7 @@ type Step struct {
 
 type Problem struct {
 	Steps  []Step
-	Stacks []aoc.Stack[rune]
+	Stacks []aoc.Stack[byte]
 }
 
 func Load() (*Problem, error) {
@@ -68,24 +68,23 @@ func Load() (*Problem, error) {
 
 		if header {
 			if line != "" {
-				headerLines = aoc.Push(headerLines, line)
+				headerLines.Push(line)
 			} else {
 				header = false
 
 				var row string
-				headerLines, row = aoc.Pop(headerLines)
+				headerLines.Pop(&row)
 
 				n := len(row) - strings.Count(row, " ")
-				problem.Stacks = make([]aoc.Stack[rune], n)
+				problem.Stacks = make([]aoc.Stack[byte], n)
 
-				for len(headerLines) != 0 {
-					headerLines, row = aoc.Pop(headerLines)
+				for headerLines.Pop(&row) {
 					for i, k := 0, 0; i < len(row); i, k = i+4, k+1 {
 						c := strings.TrimSpace(row[i : i+3])
 
 						if c != "" {
-							r := rune(c[1])
-							problem.Stacks[k] = aoc.Push(problem.Stacks[k], r)
+							b := byte(c[1])
+							problem.Stacks[k].Push(b)
 						}
 					}
 				}
@@ -110,17 +109,20 @@ func Load() (*Problem, error) {
 }
 
 func (problem *Problem) SolvePart1() error {
+	var b byte
 	for _, step := range problem.Steps {
-		var r rune
 		for k := 0; k < step.Count; k += 1 {
-			problem.Stacks[step.From], r = aoc.Pop(problem.Stacks[step.From])
-			problem.Stacks[step.To] = aoc.Push(problem.Stacks[step.To], r)
+			if problem.Stacks[step.From].Pop(&b) {
+				problem.Stacks[step.To].Push(b)
+			}
 		}
 	}
 
 	top := ""
 	for _, s := range problem.Stacks {
-		top += string(aoc.Peek(s))
+		if s.Peek(&b) {
+			top += string(b)
+		}
 	}
 
 	fmt.Printf("Part 1: %s\n", top)
@@ -128,24 +130,27 @@ func (problem *Problem) SolvePart1() error {
 }
 
 func (problem *Problem) SolvePart2() error {
+	var b byte
 	for _, step := range problem.Steps {
-		var r rune
-		t := make(aoc.Stack[rune], 0)
+		temp := make(aoc.Stack[byte], 0)
 		for k := 0; k < step.Count; k += 1 {
-			problem.Stacks[step.From], r = aoc.Pop(problem.Stacks[step.From])
-			t = aoc.Push(t, r)
+			if problem.Stacks[step.From].Pop(&b) {
+				temp.Push(b)
+			}
 		}
 
 		for k := 0; k < step.Count; k += 1 {
-			t, r = aoc.Pop(t)
-			problem.Stacks[step.To] = aoc.Push(problem.Stacks[step.To], r)
+			if temp.Pop(&b) {
+				problem.Stacks[step.To].Push(b)
+			}
 		}
-
 	}
 
 	top := ""
 	for _, s := range problem.Stacks {
-		top += string(aoc.Peek(s))
+		if s.Peek(&b) {
+			top += string(b)
+		}
 	}
 
 	fmt.Printf("Part 2: %s\n", top)

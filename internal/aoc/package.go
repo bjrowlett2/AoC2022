@@ -16,16 +16,37 @@ func SortInt64Desc(slice []int64) {
 
 type Stack[T any] []T
 
-func Peek[T any](stack Stack[T]) T {
-	n := len(stack)
-	return stack[n-1]
+func (stack *Stack[T]) Peek(item *T) bool {
+	if stack == nil {
+		return false
+	}
+
+	slice := *stack
+	if len(slice) <= 0 {
+		return false
+	}
+
+	n := len(slice)
+	*item = slice[n-1]
+	return true
 }
 
-func Pop[T any](stack Stack[T]) (Stack[T], T) {
-	n := len(stack)
-	return stack[:n-1], stack[n-1]
+func (stack *Stack[T]) Pop(item *T) bool {
+	if stack == nil {
+		return false
+	}
+
+	slice := *stack
+	if len(slice) <= 0 {
+		return false
+	}
+
+	n := len(slice)
+	*item = slice[n-1]
+	*stack = slice[:n-1]
+	return true
 }
 
-func Push[T any](stack Stack[T], item T) Stack[T] {
-	return append(stack, item)
+func (stack *Stack[T]) Push(item T) {
+	*stack = append(*stack, item)
 }
