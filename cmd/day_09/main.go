@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"strconv"
 
@@ -29,8 +28,9 @@ func main() {
 }
 
 type Motion struct {
-	DeltaX int
-	DeltaY int
+	Dx    int
+	Dy    int
+	Total int
 }
 
 type Problem struct {
@@ -63,16 +63,16 @@ func Load() (*Problem, error) {
 
 		switch line[0] {
 		case 'U':
-			motion := Motion{DeltaY: -amount}
+			motion := Motion{Dx: 0, Dy: +1, Total: amount}
 			problem.Motions = append(problem.Motions, motion)
 		case 'D':
-			motion := Motion{DeltaY: amount}
+			motion := Motion{Dx: 0, Dy: -1, Total: amount}
 			problem.Motions = append(problem.Motions, motion)
 		case 'L':
-			motion := Motion{DeltaX: -amount}
+			motion := Motion{Dx: -1, Dy: 0, Total: amount}
 			problem.Motions = append(problem.Motions, motion)
 		case 'R':
-			motion := Motion{DeltaX: amount}
+			motion := Motion{Dx: +1, Dy: 0, Total: amount}
 			problem.Motions = append(problem.Motions, motion)
 		}
 	}
@@ -85,23 +85,12 @@ type Coord struct {
 	Y int
 }
 
-func Abs(value int) int {
-	return int(math.Abs(float64(value)))
-}
-
-func Sign(value int) int {
-	return int(math.Copysign(1, float64(value)))
-}
-
 func Follow(head Coord, tail *Coord) {
-	dx := head.X - tail.X
-	dy := head.Y - tail.Y
+	absX := aoc.Abs(head.X - tail.X)
+	absY := aoc.Abs(head.Y - tail.Y)
 
-	absX := Abs(dx)
-	absY := Abs(dy)
-
-	signX := Sign(dx)
-	signY := Sign(dy)
+	signX := aoc.Sign(head.X - tail.X)
+	signY := aoc.Sign(head.Y - tail.Y)
 
 	// If the head is ever two steps directly up, down, left,
 	// or right from the tail, the tail must also move one step
@@ -138,19 +127,9 @@ func (problem *Problem) SolvePart1() error {
 
 	visited := make(aoc.Set[Coord])
 	for _, m := range problem.Motions {
-		dx := Abs(m.DeltaX)
-		signX := Sign(m.DeltaX)
-		for i := 0; i < dx; i++ {
-			head.X += signX
-			Follow(head, &tail)
-
-			visited.Add(tail)
-		}
-
-		dy := Abs(m.DeltaY)
-		signY := Sign(m.DeltaY)
-		for j := 0; j < dy; j++ {
-			head.Y += signY
+		for i := 0; i < m.Total; i++ {
+			head.X += m.Dx
+			head.Y += m.Dy
 			Follow(head, &tail)
 
 			visited.Add(tail)
@@ -175,21 +154,10 @@ func (problem *Problem) SolvePart2() error {
 	n := len(knots)
 	head := &knots[0]
 	for _, m := range problem.Motions {
-		dx := Abs(m.DeltaX)
-		signX := Sign(m.DeltaX)
-		for i := 0; i < dx; i++ {
-			head.X += signX
-			for k := 1; k < len(knots); k++ {
-				Follow(knots[k-1], &knots[k])
-			}
+		for i := 0; i < m.Total; i++ {
+			head.X += m.Dx
+			head.Y += m.Dy
 
-			visited.Add(knots[n-1])
-		}
-
-		dy := Abs(m.DeltaY)
-		signY := Sign(m.DeltaY)
-		for j := 0; j < dy; j++ {
-			head.Y += signY
 			for k := 1; k < len(knots); k++ {
 				Follow(knots[k-1], &knots[k])
 			}
