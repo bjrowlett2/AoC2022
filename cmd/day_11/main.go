@@ -157,12 +157,8 @@ func Play(problem *Problem, rounds int, fn WorryFunc) error {
 				switch monkey.Operator {
 				case "+":
 					worry = item + operand
-				case "-":
-					worry = item - operand
 				case "*":
 					worry = item * operand
-				case "/":
-					worry = item / operand
 				}
 
 				worry = fn(i, worry)
