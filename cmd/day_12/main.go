@@ -32,8 +32,11 @@ type Coord struct {
 	Y int
 }
 
+type Row []int
+type Grid []Row
+
 type Problem struct {
-	Grid   [][]int
+	Map    Grid
 	Start  Coord
 	Finish Coord
 }
@@ -51,7 +54,7 @@ func Load() (*Problem, error) {
 
 	x, y := 0, 0
 	problem := Problem{
-		Grid: make([][]int, 0),
+		Map: make(Grid, 0),
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -63,7 +66,7 @@ func Load() (*Problem, error) {
 		}
 
 		x = 0
-		row := make([]int, 0)
+		row := make(Row, 0)
 
 		for _, r := range line {
 			if r == 'S' {
@@ -89,13 +92,13 @@ func Load() (*Problem, error) {
 		}
 
 		y += 1
-		problem.Grid = append(problem.Grid, row)
+		problem.Map = append(problem.Map, row)
 	}
 
 	return &problem, nil
 }
 
-func Neighbors(c Coord, grid [][]int) []Coord {
+func Neighbors(grid Grid, c Coord) []Coord {
 	neighbors := make([]Coord, 0)
 
 	if c.X > 0 {
@@ -121,10 +124,10 @@ func Neighbors(c Coord, grid [][]int) []Coord {
 	return neighbors
 }
 
-func ShortestPath(s Coord, e Coord, grid [][]int) int {
+func ShortestPath(grid Grid, s Coord, e Coord) int {
 	distances := make([][]int, 0)
 	for y := 0; y < len(grid); y++ {
-		distances = append(distances, []int{})
+		distances = append(distances, Row{})
 		for x := 0; x < len(grid[y]); x++ {
 			distances[y] = append(distances[y], math.MaxInt32)
 		}
@@ -139,7 +142,7 @@ func ShortestPath(s Coord, e Coord, grid [][]int) int {
 		next.Pop(&c)
 
 		distance := distances[c.Y][c.X] + 1
-		for _, n := range Neighbors(c, grid) {
+		for _, n := range Neighbors(grid, c) {
 			reachable := (grid[n.Y][n.X] - grid[c.Y][c.X]) <= 1
 			visited := distances[n.Y][n.X] < math.MaxInt32
 			queued := next.Contains(n)
@@ -155,18 +158,18 @@ func ShortestPath(s Coord, e Coord, grid [][]int) int {
 }
 
 func (problem *Problem) SolvePart1() error {
-	steps := ShortestPath(problem.Start, problem.Finish, problem.Grid)
+	steps := ShortestPath(problem.Map, problem.Start, problem.Finish)
 	fmt.Printf("Part 1: %d\n", steps)
 	return nil
 }
 
 func (problem *Problem) SolvePart2() error {
 	minimum := math.MaxInt32
-	for y := 0; y < len(problem.Grid); y++ {
-		for x := 0; x < len(problem.Grid[y]); x++ {
-			if problem.Grid[y][x] == 0 {
+	for y := 0; y < len(problem.Map); y++ {
+		for x := 0; x < len(problem.Map[y]); x++ {
+			if problem.Map[y][x] == 0 {
 				s := Coord{X: x, Y: y}
-				steps := ShortestPath(s, problem.Finish, problem.Grid)
+				steps := ShortestPath(problem.Map, s, problem.Finish)
 
 				if steps < minimum {
 					minimum = steps

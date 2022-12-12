@@ -1,6 +1,6 @@
 package aoc
 
-type Stack[T any] []T
+type Stack[T comparable] []T
 
 func (stack *Stack[T]) Peek(item *T) bool {
 	if stack == nil {
