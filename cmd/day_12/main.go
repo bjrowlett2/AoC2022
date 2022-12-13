@@ -124,7 +124,7 @@ func Neighbors(grid Grid, c Coord) []Coord {
 	return neighbors
 }
 
-func ShortestPath(grid Grid, s Coord, e Coord) int {
+func ComputePath(grid Grid, s Coord, reverse bool) Grid {
 	distances := make(Grid, 0)
 	for y := 0; y < len(grid); y++ {
 		distances = append(distances, Row{})
@@ -144,6 +144,10 @@ func ShortestPath(grid Grid, s Coord, e Coord) int {
 		distance := distances[c.Y][c.X] + 1
 		for _, n := range Neighbors(grid, c) {
 			reachable := (grid[n.Y][n.X] - grid[c.Y][c.X]) <= 1
+			if reverse {
+				reachable = (grid[n.Y][n.X] - grid[c.Y][c.X]) >= -1
+			}
+
 			visited := distances[n.Y][n.X] < math.MaxInt32
 			queued := next.Contains(n)
 
@@ -154,23 +158,23 @@ func ShortestPath(grid Grid, s Coord, e Coord) int {
 		}
 	}
 
-	return distances[e.Y][e.X]
+	return distances
 }
 
 func (problem *Problem) SolvePart1() error {
-	steps := ShortestPath(problem.Map, problem.Start, problem.Finish)
-	fmt.Printf("Part 1: %d\n", steps)
+	distances := ComputePath(problem.Map, problem.Start, false)
+	fmt.Printf("Part 1: %d\n", distances[problem.Finish.Y][problem.Finish.X])
 	return nil
 }
 
 func (problem *Problem) SolvePart2() error {
+	distances := ComputePath(problem.Map, problem.Finish, true)
+
 	minimum := math.MaxInt32
 	for y := 0; y < len(problem.Map); y++ {
 		for x := 0; x < len(problem.Map[y]); x++ {
-			if problem.Map[y][x] == 0 {
-				s := Coord{X: x, Y: y}
-				steps := ShortestPath(problem.Map, s, problem.Finish)
-
+			if problem.Map[y][x] == 0 { // Zero == 'a'
+				steps := distances[y][x]
 				if steps < minimum {
 					minimum = steps
 				}
