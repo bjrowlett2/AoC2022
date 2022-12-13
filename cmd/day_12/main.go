@@ -125,7 +125,7 @@ func Neighbors(grid Grid, c Coord) []Coord {
 }
 
 func ShortestPath(grid Grid, s Coord, e Coord) int {
-	distances := make([][]int, 0)
+	distances := make(Grid, 0)
 	for y := 0; y < len(grid); y++ {
 		distances = append(distances, Row{})
 		for x := 0; x < len(grid[y]); x++ {
