@@ -168,6 +168,13 @@ func (problem *Problem) SolvePart1() error {
 }
 
 func (problem *Problem) SolvePart2() error {
+	//
+	// Optimization:
+	//
+	// Instead of computing the path starting from each 'a' (ie: multiple passes),
+	// if we reverse the problem and compute the path from the end, we can just iterate
+	// over the map once and pick the 'a' with the minimum distance.
+	//
 	distances := ComputePath(problem.Map, problem.Finish, true)
 
 	minimum := math.MaxInt32
