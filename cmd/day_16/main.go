@@ -107,7 +107,7 @@ type State struct {
 	Visited  string
 }
 
-func TraverseTunnels(problem *Problem, time int64) (int64, []string) {
+func TraverseTunnels(problem *Problem, time int64) ([]string, int64) {
 	initial := State{
 		Valve:    "AA",
 		Time:     time,
@@ -138,7 +138,7 @@ func TraverseTunnels(problem *Problem, time int64) (int64, []string) {
 		}
 
 		path := state.Visited
-		if pressures[path] < state.Pressure {
+		if _, ok := pressures[path]; !ok {
 			pressures[path] = state.Pressure
 		}
 
@@ -166,17 +166,17 @@ func TraverseTunnels(problem *Problem, time int64) (int64, []string) {
 		}
 	}
 
-	return maximumPressure, strings.Split(maximumPath, "-")
+	return strings.Split(maximumPath, "-"), maximumPressure
 }
 
 func (problem *Problem) SolvePart1() error {
-	pressure, _ := TraverseTunnels(problem, 30)
+	_, pressure := TraverseTunnels(problem, 30)
 	fmt.Printf("Part 1: %d\n", pressure)
 	return nil
 }
 
 func (problem *Problem) SolvePart2() error {
-	me, path := TraverseTunnels(problem, 26)
+	path, pressure := TraverseTunnels(problem, 26)
 	for _, name := range path {
 		if valve, ok := problem.Valves[name]; ok {
 			valve.FlowRate = 0
@@ -184,7 +184,7 @@ func (problem *Problem) SolvePart2() error {
 		}
 	}
 
-	elephant, _ := TraverseTunnels(problem, 26)
-	fmt.Printf("Part 2: %d\n", me+elephant)
+	_, elephant := TraverseTunnels(problem, 26)
+	fmt.Printf("Part 2: %d\n", pressure+elephant)
 	return nil
 }
