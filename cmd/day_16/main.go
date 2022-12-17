@@ -115,8 +115,10 @@ func TraverseTunnels(problem *Problem, time int64) ([]string, int64) {
 		Visited:  "AA",
 	}
 
+	var maximumPath string
+	var maximumPressure int64 = 0
+
 	queue := make(aoc.Queue[State], 0)
-	pressures := make(map[string]int64)
 
 	queue.Push(initial)
 	for len(queue) != 0 {
@@ -126,43 +128,29 @@ func TraverseTunnels(problem *Problem, time int64) ([]string, int64) {
 		start := state.Valve
 		valve := problem.Valves[start]
 
-		reachable := make([]string, 0)
-		for next, distance := range valve.Distances {
+		if state.Pressure > maximumPressure {
+			maximumPath = state.Visited
+			maximumPressure = state.Pressure
+		}
+
+		for neighbor, distance := range valve.Distances {
 			if distance < state.Time {
-				if !strings.Contains(state.Visited, next) {
-					if problem.Valves[next].FlowRate != 0 {
-						reachable = append(reachable, next)
+				if problem.Valves[neighbor].FlowRate != 0 {
+					if !strings.Contains(state.Visited, neighbor) {
+						newTime := state.Time - valve.Distances[neighbor] - 1
+						newPressure := newTime * problem.Valves[neighbor].FlowRate
+
+						next := State{
+							Valve:    neighbor,
+							Time:     newTime,
+							Pressure: state.Pressure + newPressure,
+							Visited:  fmt.Sprintf("%s-%s", state.Visited, neighbor),
+						}
+
+						queue = append(queue, next)
 					}
 				}
 			}
-		}
-
-		path := state.Visited
-		if _, ok := pressures[path]; !ok {
-			pressures[path] = state.Pressure
-		}
-
-		for _, finish := range reachable {
-			newTime := state.Time - valve.Distances[finish] - 1
-			newPressure := newTime * problem.Valves[finish].FlowRate
-
-			next := State{
-				Valve:    finish,
-				Time:     newTime,
-				Pressure: state.Pressure + newPressure,
-				Visited:  fmt.Sprintf("%s-%s", state.Visited, finish),
-			}
-
-			queue = append(queue, next)
-		}
-	}
-
-	var maximumPath string
-	var maximumPressure int64 = 0
-	for path, pressure := range pressures {
-		if pressure > maximumPressure {
-			maximumPath = path
-			maximumPressure = pressure
 		}
 	}
 
