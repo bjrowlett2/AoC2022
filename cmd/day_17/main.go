@@ -141,7 +141,17 @@ func Move(rock Rock, chamber Chamber, dx, dy int64) Rock {
 	return moved
 }
 
-func Simulate(problem *Problem, steps int) int64 {
+type Key struct {
+	RockIndex int64
+	JetIndex  int64
+}
+
+type State struct {
+	I      int64
+	Height int64
+}
+
+func Simulate(problem *Problem, steps int64) int64 {
 	rocks := make([]Rock, 0)
 	rocks = append(rocks, NewRock("####"))
 	rocks = append(rocks, NewRock(".#.\n###\n.#."))
@@ -149,12 +159,18 @@ func Simulate(problem *Problem, steps int) int64 {
 	rocks = append(rocks, NewRock("#\n#\n#\n#"))
 	rocks = append(rocks, NewRock("##\n##"))
 
+	var numRocks int64 = int64(len(rocks))
+	var numJets int64 = int64(len(problem.Jets))
+
+	var height int64 = 0
 	chamber := make(Chamber)
 
-	jetIndex := 0
-	var height int64 = 0
-	for i := 0; i < steps; i++ {
-		rockIndex := i % len(rocks)
+	seen := make(map[Key]State)
+
+	var i int64
+	var jetIndex int64 = 0
+	for i = 0; i < steps; i++ {
+		rockIndex := i % numRocks
 		template := rocks[rockIndex]
 
 		rock := Rock{
@@ -176,7 +192,7 @@ func Simulate(problem *Problem, steps int) int64 {
 			}
 
 			jetIndex += 1
-			jetIndex %= len(problem.Jets)
+			jetIndex %= numJets
 
 			if CanMove(rock, chamber, 0, -1) {
 				rock = Move(rock, chamber, 0, -1)
@@ -184,6 +200,73 @@ func Simulate(problem *Problem, steps int) int64 {
 				for coord := range rock.Points {
 					chamber[coord] = true
 					height = aoc.Max64(height, coord.Y)
+				}
+
+				//
+				// Below here is disgusting...
+				//
+
+				deleted := make([]Coord, 0)
+				for coord := range chamber {
+					if coord.Y < (height - 40) {
+						deleted = append(deleted, coord)
+					}
+				}
+
+				for _, coord := range deleted {
+					delete(chamber, coord)
+				}
+
+				var x int64
+				found := true
+				for x = 0; x < 7; x++ {
+					coord := Coord{X: x, Y: height}
+					if _, ok := chamber[coord]; !ok {
+						found = false
+					}
+				}
+
+				if found {
+					key := Key{
+						RockIndex: rockIndex,
+						JetIndex:  jetIndex,
+					}
+
+					if state, ok := seen[key]; ok {
+						dI := i - state.I
+						dH := height - state.Height
+
+						z := (steps - i) / dI
+
+						i += dI * z
+						height += dH * z
+
+						added := make([]Coord, 0)
+						deleted := make([]Coord, 0)
+						for coord := range chamber {
+							deleted = append(deleted, coord)
+
+							coord.Y += dH * z
+							added = append(added, coord)
+						}
+
+						for _, coord := range added {
+							chamber[coord] = true
+						}
+
+						for _, coord := range deleted {
+							delete(chamber, coord)
+						}
+					}
+
+					seen[key] = State{
+						I:      i,
+						Height: height,
+					}
+
+					//
+					// Hopefully, I'll come back and clean that up later...
+					//
 				}
 
 				break
@@ -201,6 +284,7 @@ func (problem *Problem) SolvePart1() error {
 }
 
 func (problem *Problem) SolvePart2() error {
-	fmt.Printf("Part 2: %d\n", 0)
+	height := Simulate(problem, 1000000000000)
+	fmt.Printf("Part 2: %d\n", height)
 	return nil
 }
