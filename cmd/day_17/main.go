@@ -104,105 +104,44 @@ func NewRock(shape string) Rock {
 
 type Chamber map[Coord]bool
 
-func Move(rock Rock, chamber Chamber, jet Jet) (Rock, bool) {
-	can := true
+func CanMove(rock Rock, chamber Chamber, dx, dy int64) bool {
 	for coord := range rock.Points {
-		coord.X += int64(jet)
+		coord.X += dx
+		coord.Y += dy
+
 		if (coord.X < 0) || (coord.X > 6) {
-			can = false
-			break
+			return false // Hit the wall.
 		}
 
-		if _, ok := chamber[coord]; ok {
-			can = false
-			break
-		}
-	}
-
-	if can {
-		moved := Rock{
-			Width:  rock.Width,
-			Height: rock.Height,
-			Points: make(map[Coord]bool),
-		}
-
-		for coord := range rock.Points {
-			coord.X += int64(jet)
-			moved.Points[coord] = true
-		}
-
-		return moved, true
-	}
-
-	return rock, false
-}
-
-func Fall(rock Rock, chamber Chamber) (Rock, bool) {
-	can := true
-	for coord := range rock.Points {
-		coord.Y -= 1
 		if coord.Y <= 0 {
-			can = false
-			break
+			return false // Hit the ground.
 		}
 
 		if _, ok := chamber[coord]; ok {
-			can = false
-			break
+			return false // Hit another rock.
 		}
 	}
 
-	if can {
-		moved := Rock{
-			Width:  rock.Width,
-			Height: rock.Height,
-			Points: make(map[Coord]bool),
-		}
-
-		for coord := range rock.Points {
-			coord.Y -= 1
-			moved.Points[coord] = true
-		}
-
-		return moved, true
-	}
-
-	return rock, false
+	return true
 }
 
-func Draw(rock Rock, chamber Chamber) {
-	w := 7
-	var h int64 = 20
-
-	grid := make([][]byte, 0)
-
-	var y int64 = 0
-	for y = 0; y < h; y++ {
-		grid = append(grid, make([]byte, 0))
-		for x := 0; x < w; x++ {
-			grid[y] = append(grid[y], ' ')
-		}
-	}
-
-	for coord := range chamber {
-		grid[h-coord.Y][coord.X] = '#'
+func Move(rock Rock, chamber Chamber, dx, dy int64) Rock {
+	moved := Rock{
+		Width:  rock.Width,
+		Height: rock.Height,
+		Points: make(map[Coord]bool),
 	}
 
 	for coord := range rock.Points {
-		grid[h-coord.Y][coord.X] = '@'
+		coord.X += dx
+		coord.Y += dy
+		moved.Points[coord] = true
 	}
 
-	for y = 0; y < h; y++ {
-		fmt.Print("=")
-		fmt.Print(string(grid[y]))
-		fmt.Print("=")
-		fmt.Println()
-	}
-
-	fmt.Println("=========")
+	return moved
 }
 
-func (problem *Problem) SolvePart1() error {
+func Simulate(problem *Problem, steps int) int64 {
 	rocks := make([]Rock, 0)
 	rocks = append(rocks, NewRock("####"))
 	rocks = append(rocks, NewRock(".#.\n###\n.#."))
@@ -213,8 +152,8 @@ func (problem *Problem) SolvePart1() error {
 	chamber := make(Chamber)
 
 	jetIndex := 0
-	var floor int64 = 0
-	for i := 0; i < 2022; i++ {
+	var height int64 = 0
+	for i := 0; i < steps; i++ {
 		rockIndex := i % len(rocks)
 		template := rocks[rockIndex]
 
@@ -225,32 +164,26 @@ func (problem *Problem) SolvePart1() error {
 		}
 
 		for coord := range template.Points {
-			//
-			// Each rock appears so that its left edge is two units away
-			// from the left wall and its bottom edge is three units above
-			// the highest rock in the room (or the floor, if there isn't one).
-			//
 			coord.X += 2
-			coord.Y += floor + template.Height + 3
+			coord.Y += height + template.Height + 3
 			rock.Points[coord] = true
 		}
 
-		//Draw(rock, chamber)
-
 		for {
 			jet := problem.Jets[jetIndex]
-			rock, _ = Move(rock, chamber, jet)
-
-			var fell bool
-			rock, fell = Fall(rock, chamber)
+			if CanMove(rock, chamber, int64(jet), 0) {
+				rock = Move(rock, chamber, int64(jet), 0)
+			}
 
 			jetIndex += 1
 			jetIndex %= len(problem.Jets)
 
-			if !fell {
+			if CanMove(rock, chamber, 0, -1) {
+				rock = Move(rock, chamber, 0, -1)
+			} else {
 				for coord := range rock.Points {
 					chamber[coord] = true
-					floor = aoc.Max64(floor, coord.Y)
+					height = aoc.Max64(height, coord.Y)
 				}
 
 				break
@@ -258,72 +191,16 @@ func (problem *Problem) SolvePart1() error {
 		}
 	}
 
-	fmt.Printf("Part 1: %d\n", floor)
+	return height
+}
+
+func (problem *Problem) SolvePart1() error {
+	height := Simulate(problem, 2022)
+	fmt.Printf("Part 1: %d\n", height)
 	return nil
 }
 
 func (problem *Problem) SolvePart2() error {
-	rocks := make([]Rock, 0)
-	rocks = append(rocks, NewRock("####"))
-	rocks = append(rocks, NewRock(".#.\n###\n.#."))
-	rocks = append(rocks, NewRock("..#\n..#\n###"))
-	rocks = append(rocks, NewRock("#\n#\n#\n#"))
-	rocks = append(rocks, NewRock("##\n##"))
-
-	chamber := make(Chamber)
-
-	jetIndex := 0
-	var floor int64 = 0
-	for i := 0; i < 1000000000000; i++ {
-		rockIndex := i % len(rocks)
-		template := rocks[rockIndex]
-
-		rock := Rock{
-			Width:  template.Width,
-			Height: template.Height,
-			Points: make(map[Coord]bool),
-		}
-
-		for coord := range template.Points {
-			//
-			// Each rock appears so that its left edge is two units away
-			// from the left wall and its bottom edge is three units above
-			// the highest rock in the room (or the floor, if there isn't one).
-			//
-			coord.X += 2
-			coord.Y += floor + template.Height + 3
-			rock.Points[coord] = true
-		}
-
-		//Draw(rock, chamber)
-
-		for {
-			jet := problem.Jets[jetIndex]
-			rock, _ = Move(rock, chamber, jet)
-
-			var fell bool
-			rock, fell = Fall(rock, chamber)
-
-			jetIndex += 1
-			jetIndex %= len(problem.Jets)
-
-			if !fell {
-				max := make([]int64, 0)
-				for i := 0; i < 7; i++ {
-					max = append(max, 0)
-				}
-
-				for coord := range rock.Points {
-					chamber[coord] = true
-					floor = aoc.Max64(floor, coord.Y)
-					max[coord.Y] = aoc.Max64(max[coord.Y], coord.Y)
-				}
-
-				break
-			}
-		}
-	}
-
-	fmt.Printf("Part 2: %d\n", floor)
+	fmt.Printf("Part 2: %d\n", 0)
 	return nil
 }
