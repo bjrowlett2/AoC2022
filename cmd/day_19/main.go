@@ -90,6 +90,10 @@ type State struct {
 	ClayRobots     int64
 	ObsidianRobots int64
 	GeodeRobots    int64
+
+	Skipped             bool
+	CouldBuildOreRobot  bool
+	CouldBuildClayRobot bool
 }
 
 func OpenGeodes(blueprint Blueprint, time int64) int64 {
@@ -166,27 +170,34 @@ func OpenGeodes(blueprint Blueprint, time int64) int64 {
 
 			// We could choose to build another ore robot.
 			if state.Ore >= blueprint.OreRobotCost {
-				// But only if we'd benefit from more ore per minute.
-				if state.OreRobots < maxOreCost {
-					next := base
-					next.Ore -= blueprint.OreRobotCost
-					next.OreRobots += 1
-					queue.Push(next)
+				base.CouldBuildOreRobot = true
+				if !state.Skipped || !state.CouldBuildOreRobot {
+					// But only if we'd benefit from more ore per minute.
+					if state.OreRobots < maxOreCost {
+						next := base
+						next.Ore -= blueprint.OreRobotCost
+						next.OreRobots += 1
+						queue.Push(next)
+					}
 				}
 			}
 
 			// We could choose to build another clay robot.
 			if state.Ore >= blueprint.ClayRobotCost {
-				// But only if we'd benefit from more clay per minute.
-				if state.OreRobots < maxClayCost {
-					next := base
-					next.Ore -= blueprint.ClayRobotCost
-					next.ClayRobots += 1
-					queue.Push(next)
+				base.CouldBuildClayRobot = true
+				if !state.Skipped || !state.CouldBuildClayRobot {
+					// But only if we'd benefit from more clay per minute.
+					if state.OreRobots < maxClayCost {
+						next := base
+						next.Ore -= blueprint.ClayRobotCost
+						next.ClayRobots += 1
+						queue.Push(next)
+					}
 				}
 			}
 
 			// We could choose to do nothing.
+			base.Skipped = true
 			queue.Push(base)
 		}
 	}
