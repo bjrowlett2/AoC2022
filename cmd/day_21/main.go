@@ -11,21 +11,16 @@ import (
 func main() {
 	var err error
 
-	var problem1 *Problem
-	if problem1, err = Load(); err != nil {
+	var problem *Problem
+	if problem, err = Load(); err != nil {
 		log.Fatal(err)
 	}
 
-	if err = problem1.SolvePart1(); err != nil {
+	if err = problem.SolvePart1(); err != nil {
 		log.Fatal(err)
 	}
 
-	var problem2 *Problem
-	if problem2, err = Load(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err = problem2.SolvePart2(); err != nil {
+	if err = problem.SolvePart2(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -54,6 +49,10 @@ type Problem struct {
 	Monkeys map[string]Monkey
 }
 
+func IsExpression(s string) bool {
+	return strings.ContainsAny(s, "+-*/")
+}
+
 func Load() (*Problem, error) {
 	var err error
 
@@ -72,20 +71,26 @@ func Load() (*Problem, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		parts := strings.Split(line, ":")
+		parts[0] = strings.TrimSpace(parts[0])
+		parts[1] = strings.TrimSpace(parts[1])
 
 		monkey := Monkey{
 			Name: parts[0],
 		}
 
-		if len(parts[1]) < 9 { // @Hack
+		if !IsExpression(parts[1]) {
 			monkey.Type = MonkeyTypeNumber
-			fmt.Sscanf(parts[1], " %d", &monkey.Number)
+			if _, err = fmt.Sscanf(parts[1], "%d", &monkey.Number); err != nil {
+				return nil, err
+			}
 		} else {
-			monkey.Type = MonkeyTypeFormula
-
 			formula := &monkey.Formula
-			fmt.Sscanf(parts[1], " %s %s %s", &formula.Left, &formula.Operator, &formula.Right)
+			monkey.Type = MonkeyTypeFormula
+			if _, err = fmt.Sscanf(parts[1], "%s %s %s", &formula.Left, &formula.Operator, &formula.Right); err != nil {
+				return nil, err
+			}
 		}
 
 		problem.Monkeys[monkey.Name] = monkey
