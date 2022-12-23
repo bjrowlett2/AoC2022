@@ -355,6 +355,6 @@ func (problem *Problem) SolvePart2() error {
 	row := y + 1
 	column := x + 1
 	password := 1000*row + 4*column + int(facing)
-	fmt.Printf("Part 1: %d\n", password)
+	fmt.Printf("Part 2: %d\n", password)
 	return nil
 }
