@@ -33,3 +33,7 @@ func Max(a, b int) int {
 func Max64(a, b int64) int64 {
 	return int64(math.Max(float64(a), float64(b)))
 }
+
+func Pow64(x, y int64) int64 {
+	return int64(math.Pow(float64(x), float64(y)))
+}
