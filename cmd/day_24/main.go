@@ -230,6 +230,6 @@ func (problem *Problem) SolveBothParts() error {
 	// Going back for snacks...
 	x2, y2 := FindStart(problem, 0, problem.Height-1)
 	part2 := Navigate(problem, x1, y1, Navigate(problem, x2, y2, part1))
-	fmt.Printf("Part 1: %d\n", part2)
+	fmt.Printf("Part 2: %d\n", part2)
 	return nil
 }
